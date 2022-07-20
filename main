@@ -141,6 +141,28 @@ void send_not_taken_email()
   delay(1000);    
 }
 
+void send_emergency_email()
+{
+  WiFiClient client; 
+  const int httpPort = 80;  
+  if (!client.connect(host, httpPort)) {  
+        Serial.println("connection failed");  
+  return;} 
+  char a='y';
+  if (a=='y'){         
+          String url = "/trigger/Emergency_button/json/with/key/dVnZ9_UeDB6ohBYEz_lzz2f_gHKrS4Nqutwbde50F8t"; 
+          Serial.print("Requesting URL: ");
+          Serial.println(url);                
+           client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +"Connection: close\r\n\r\n");    
+                          }            
+  
+  else{
+  Serial.println("Correct character not pressed.Try again");
+  
+  }
+  delay(1000);    
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -186,7 +208,7 @@ lcd.home();
 void loop()
 {
   Blynk.run();
-  
+    
   lcd.setBacklight(150);
   lcd.setCursor(0,0);
   lcd.print("Good Afternoon!");
@@ -217,12 +239,16 @@ void loop()
     object_old = object;
     servo3.write(90);
   }
-  if (timeClient.getMinutes()-tablet_minute >= 15 && min_var == 1)
+  if ((timeClient.getMinutes()-tablet_minute >= 15) && min_var == 1)
   {
     servo3.write(0);
     min_var = 0; 
     delay(2000);
     servo3.write(90);
     send_not_taken_email();
+  }
+  if (button == HIGH)
+  {
+    send_emergency_email();
   }
 }
