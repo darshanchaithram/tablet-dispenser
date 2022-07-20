@@ -25,7 +25,7 @@ int show=1; //lcd display's
 int servo_top = 12, servo_mid = 13, servo_bot = 15, buzzer = 2, scl = 5, sda = 4;
 int ir_sensor = 0, button = 16;
 int state=0, old_state=0;
-int i=0, angle = 80, object=1, object_old = 1;
+int i=0, angle = 80, object=1, object_old = 1, min_var=0, tablet_minute=0;
   
 
 BLYNK_WRITE(V1)
@@ -36,6 +36,8 @@ BLYNK_WRITE(V1)
   Serial.println(old_state);
   if (state>old_state)
   {
+    tablet_minute  = timeClient.getMinutes();
+    min_var = 1;
     for (int i=0; i<2; i++)
     {
       digitalWrite(buzzer, HIGH);
@@ -68,7 +70,10 @@ BLYNK_WRITE(V1)
     }
   }
   else if (state==0)
+  {
     old_state = 0;
+    
+  }
 }
 
 void send_taken_email()
@@ -114,6 +119,27 @@ void send_finished_email()
   delay(1000);    
 }
 
+void send_not_taken_email()
+{
+  WiFiClient client; 
+  const int httpPort = 80;  
+  if (!client.connect(host, httpPort)) {  
+        Serial.println("connection failed");  
+  return;} 
+  char a='y';
+  if (a=='y'){         
+          String url = "/trigger/tablets_not_taken/json/with/key/dVnZ9_UeDB6ohBYEz_lzz2f_gHKrS4Nqutwbde50F8t"; 
+          Serial.print("Requesting URL: ");
+          Serial.println(url);                
+           client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +"Connection: close\r\n\r\n");    
+                          }            
+  
+  else{
+  Serial.println("Correct character not pressed.Try again");
+  
+  }
+  delay(1000);    
+}
 
 void setup()
 {
@@ -183,11 +209,20 @@ void loop()
     delay(2000);
     servo3.write(90);
     object_old = object;
-    send_taken_email();         
+    send_taken_email(); 
+    min_var = 0;        
   }
   else if (object>= object_old)
   {
     object_old = object;
     servo3.write(90);
+  }
+  if (timeClient.getMinutes()-tablet_minute >= 15 && min_var == 1)
+  {
+    servo3.write(0);
+    min_var = 0; 
+    delay(2000);
+    servo3.write(90);
+    send_not_taken_email();
   }
 }
