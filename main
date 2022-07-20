@@ -41,12 +41,16 @@ BLYNK_WRITE(V1)
     for (int i=0; i<2; i++)
     {
       digitalWrite(buzzer, HIGH);
+      lcd.backlight(0);
       delay(300);
       digitalWrite(buzzer, LOW);
+      lcd.backlight(255);
       delay(300);
       digitalWrite(buzzer, HIGH);
+      lcd.backlight(0);
       delay(200);
-      digitalWrite(buzzer, LOW);  
+      digitalWrite(buzzer, LOW);
+      lcd.backlight(255);  
     }
     if (angle<180)
     {
@@ -234,7 +238,7 @@ void loop()
     send_taken_email(); 
     min_var = 0;        
   }
-  else if (object>= object_old)
+  else if (object>=object_old)
   {
     object_old = object;
     servo3.write(90);
