@@ -1,21 +1,26 @@
-demcu #define BLYNK_PRINT Serial
+#define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include<Servo.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 #include <LiquidCrystal_I2C.h>
+#include <Wire.h>
 
 
-char auth[] = "YOUR BLYNK AUTHENTICATION TOKEN;
-char ssid[] = "YOUR SSID";
-char password[] = "YOUR WIFI PASSWORD";
+char auth[] = "IjL0YBnec6o4gVonzhVX4Efq1OGkRbiX";
+char ssid[] = "Samsung A30";
+char password[] = "7778887878";
 
 const char* host = "maker.ifttt.com";
 
 
 Servo servo1;
-Servo servo2;
+Servo servo2; 
 Servo servo3;
 LiquidCrystal_I2C lcd(0x27,16,2);
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP,"pool.ntp.org", 19800,60000);
 int show=1; //lcd display's
 int servo_top = 12, servo_mid = 13, servo_bot = 15, buzzer = 2, scl = 5, sda = 4;
 int ir_sensor = 0, button = 16;
@@ -75,7 +80,7 @@ void send_taken_email()
   return;} 
   char a='y';
   if (a=='y'){         
-          String url = "YOUR WEBHOOK URL (from IFTTT)"; 
+          String url = "/trigger/tablets_taken/json/with/key/dVnZ9_UeDB6ohBYEz_lzz2f_gHKrS4Nqutwbde50F8t"; 
           Serial.print("Requesting URL: ");
           Serial.println(url);                
            client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +"Connection: close\r\n\r\n");    
@@ -97,7 +102,7 @@ void send_finished_email()
   return;} 
   char a='y';
   if (a=='y'){         
-          String url = "YOUR WEBHOOK URL2 (from IFTTT)"; 
+          String url = "/trigger/Dispenser_empty/json/with/key/dVnZ9_UeDB6ohBYEz_lzz2f_gHKrS4Nqutwbde50F8t"; 
           Serial.print("Requesting URL: ");
           Serial.println(url);                
            client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +"Connection: close\r\n\r\n");    
@@ -133,14 +138,20 @@ void setup()
   servo3.write(90);
 
   //lcd setup test
+  Wire.begin(D2, D1);
+  lcd.begin(16,2);
+  lcd.init(); 
+  lcd.backlight();
 
+lcd.home();
   //email-webhook
   Serial.begin(115200);
   delay(100); 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-  }  
+  }
+  timeClient.begin();  
   Serial.println("");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());  
@@ -149,7 +160,17 @@ void setup()
 void loop()
 {
   Blynk.run();
+  
+  lcd.setBacklight(150);
+  lcd.setCursor(0,0);
+  lcd.print("Good Afternoon!");
 
+  //get time
+  timeClient.update();
+  Serial.println(timeClient.getFormattedTime());
+  lcd.setCursor(4,1);
+  lcd.print(timeClient.getFormattedTime());
+  
   //connect to webhook for email
   WiFiClient client; 
   const int httpPort = 80;
